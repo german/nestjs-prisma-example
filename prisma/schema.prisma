@@ -7,9 +7,19 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
+enum InvoiceStatus {
+  CREATED
+  PENDING
+  PAID
+  CANCELLED
 }
+
+model Invoice {
+  id          String         @id @default(uuid())
+  amount      Decimal        @db.Decimal(24, 18)
+  status      InvoiceStatus  @default(CREATED)
+  paidAt      DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime       @default(now())
+}
+
