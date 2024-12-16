@@ -41,6 +41,16 @@ export class InvoicesService {
     return this.prisma.invoice.delete({ where: { id } });
   }
 
+  // Utility method to create a delay
+  private async delay(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // Generate a random delay between 1 and 5 seconds
+  private getRandomDelay(): number {
+    return Math.floor(Math.random() * 4000) + 1000; // 1000-5000 ms
+  }
+
   async updateToPending(id: string) {
     // Find the invoice first
     const existingInvoice = await this.prisma.invoice.findUnique({ 
@@ -57,6 +67,12 @@ export class InvoicesService {
       throw new ConflictException(`Invoice ${id} cannot be moved to PENDING. Current status: ${existingInvoice.status}`);
     }
 
+    // Generate a random delay
+    const delayDuration = this.getRandomDelay();
+
+    // Introduce the delay
+    await this.delay(delayDuration);
+
     // Update invoice status to PENDING
     const updatedInvoice = await this.prisma.invoice.update({
       where: { id },
@@ -69,9 +85,13 @@ export class InvoicesService {
     await this.invoiceQueue.addJob({
       id: updatedInvoice.id,
       amount: updatedInvoice.amount,
-      status: updatedInvoice.status
+      status: updatedInvoice.status,
+      delayApplied: delayDuration
     });
 
-    return updatedInvoice;
+    return {
+      ...updatedInvoice,
+      processingDelay: delayDuration
+    };
   }
 }
