@@ -19,12 +19,8 @@ export class InvoiceProcessingQueue {
 
     this.worker = new Worker('invoice-queue', async job => {
       try {
-        // Simulate processing logic
         this.logger.log(`Processing invoice: ${job.data.id}`);
-        
-        // Potential background processing steps
-        // For example, external payment gateway validation
-        await this.simulateProcessing(job.data);
+        await this.doProcessing(job.data.id);
       } catch (error) {
         this.logger.error(`Failed to process invoice ${job.data.id}`, error);
         throw error;
@@ -37,16 +33,22 @@ export class InvoiceProcessingQueue {
     });
   }
 
-  private async simulateProcessing(invoiceData: any) {
+  private async doProcessing(id: string) {
     // Simulate an async processing step
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // await new Promise(resolve => setTimeout(resolve, 2000));
+
+    const newStatus = Math.random() > 0.5 ? InvoiceStatus.PAID : InvoiceStatus.CANCELLED ;
+
+    // Update invoice status to PENDING
+    const updatedInvoice = await this.prisma.invoice.update({
+      where: { id },
+      data: { 
+        status: newStatus 
+      }
+    });
     
-    // Hypothetical processing logic
-    // In a real-world scenario, this might involve:
-    // - Calling external payment gateway
-    // - Performing validation
     // - Updating invoice status based on processing result
-    this.logger.log(`Invoice ${invoiceData.id} processing completed`);
+    this.logger.log(`Invoice ${id} processing completed`);
   }
 
   async addJob(invoiceData: any) {

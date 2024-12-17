@@ -1,6 +1,7 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
+import { InvoiceResponseDto } from './dto/invoice-response.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { InvoiceStatus } from '@prisma/client';
 import { InvoiceProcessingQueue } from './queues/invoice-processing.queue';
@@ -14,20 +15,61 @@ export class InvoicesService {
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto) {
-    return this.prisma.invoice.create({
-      data: {
-        amount: new Decimal(createInvoiceDto.amount),
-        status: InvoiceStatus.CREATED
-      }
-    });
+    // Validate amount explicitly
+    if (!createInvoiceDto.amount || createInvoiceDto.amount <= 0) {
+      throw new BadRequestException('Invalid invoice amount');
+    }
+
+    try {
+      const invoice = await this.prisma.invoice.create({
+        data: {
+          amount: new Decimal(createInvoiceDto.amount),
+          status: InvoiceStatus.CREATED
+        }
+      });
+
+      // Enqueue the invoice
+      await this.invoiceQueue.addJob(invoice);
+
+      return invoice;
+    } catch (error) {
+      // Log the error for debugging
+      console.error('Invoice creation error:', error);
+      throw new BadRequestException('Failed to create invoice');
+    }
   }
 
-  async findAll() {
-    return this.prisma.invoice.findMany();
+  async findAll(): Promise<InvoiceResponseDto[]> {
+    const invoices = await this.prisma.invoice.findMany();
+    
+    // Map Prisma results to response DTOs
+    return invoices.map(invoice => 
+      new InvoiceResponseDto({
+        id: invoice.id,
+        amount: Number(invoice.amount),
+        status: invoice.status,
+        createdAt: invoice.createdAt,
+        paidAt: invoice.paidAt,
+        cancelledAt: invoice.cancelledAt
+      })
+    );
   }
 
-  async findOne(id: string) {
-    return this.prisma.invoice.findUnique({ where: { id } });
+  async findOne(id: string): Promise<InvoiceResponseDto|null> {
+    const invoice = await this.prisma.invoice.findUnique({ where: { id } });
+
+    if(invoice) {
+      return new InvoiceResponseDto({
+        id: invoice.id,
+        amount: Number(invoice.amount),
+        status: invoice.status,
+        createdAt: invoice.createdAt,
+        paidAt: invoice.paidAt,
+        cancelledAt: invoice.cancelledAt
+      });
+    } else {
+      return null;
+    }
   }
 
   async update(id: string, updateInvoiceDto: UpdateInvoiceDto) {

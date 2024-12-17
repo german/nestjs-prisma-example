@@ -21,10 +21,11 @@ import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { InvoiceResponseDto } from './dto/invoice-response.dto';
 import { plainToClass } from '@nestjs/class-transformer';
+import { TransformInterceptor } from '../common/interceptors/transform.interceptor';
 
 @ApiTags('invoices')
 @Controller('invoices')
-@UseInterceptors(ClassSerializerInterceptor)
+@UseInterceptors(TransformInterceptor) //ClassSerializerInterceptor)
 export class InvoicesController {
   constructor(private readonly invoicesService: InvoicesService) {}
 
@@ -61,22 +62,14 @@ export class InvoicesController {
   @Get()
   @ApiOperation({ summary: 'List all invoices' })
   @ApiResponse({ status: 200, type: [InvoiceResponseDto] })
-  async findAll(): Promise<InvoiceResponseDto[]> {
-    const invoices = await this.invoicesService.findAll();
-    return invoices.map(invoice => 
-      plainToClass(InvoiceResponseDto, invoice, { 
-        excludeExtraneousValues: true 
-      })
-    );
+  findAll(): Promise<InvoiceResponseDto[]> {
+    return this.invoicesService.findAll();
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Get an invoice by ID' })
   @ApiResponse({ status: 200, type: InvoiceResponseDto })
-  async findOne(@Param('id') id: string): Promise<InvoiceResponseDto> {
-    const invoice = await this.invoicesService.findOne(id);
-    return plainToClass(InvoiceResponseDto, invoice, { 
-      excludeExtraneousValues: true 
-    });
+  findOne(@Param('id') id: string): Promise<InvoiceResponseDto | null> {
+    return this.invoicesService.findOne(id);
   }
 }

@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { WorkerModule } from './worker.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -25,4 +26,11 @@ async function bootstrap() {
 
   await app.listen(3000);
 }
+
+async function bootstrapWorker() {
+  const app = await NestFactory.create(WorkerModule);
+  await app.listen(3001); // Optional: run on different port
+}
+
 bootstrap();
+bootstrapWorker();
