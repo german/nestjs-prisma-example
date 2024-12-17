@@ -4,8 +4,7 @@
   "scripts": {
     "start": "nest start",
     "start:dev": "nest start --watch",
-    "build": "nest build",
-    "start:worker": "nest start --webpack --config webpack-hmr.config.js --watch"
+    "build": "nest build"
   },
   "dependencies": {
     "@nestjs/bullmq": "^10.2.3",

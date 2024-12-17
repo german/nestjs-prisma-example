@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
-import { InvoiceProcessingWorker } from './workers/invoice-processing.worker';
+import { InvoiceProcessingQueue } from './invoices/queues/invoice-processing.queue';
 import { InvoicesModule } from './invoices/invoices.module';
 import { BullModule } from '@nestjs/bullmq';
 import { SwaggerModule } from '@nestjs/swagger';
@@ -26,7 +26,7 @@ import { SwaggerModule } from '@nestjs/swagger';
   controllers: [],
   providers: [
     PrismaService,
-    InvoiceProcessingWorker
+    InvoiceProcessingQueue
   ],
 })
 export class AppModule {}

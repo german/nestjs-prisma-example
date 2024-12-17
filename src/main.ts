@@ -32,5 +32,5 @@ async function bootstrapWorker() {
   await app.listen(3001); // Optional: run on different port
 }
 
-bootstrap();
 bootstrapWorker();
+bootstrap();

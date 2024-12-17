@@ -28,9 +28,6 @@ export class InvoicesService {
         }
       });
 
-      // Enqueue the invoice
-      await this.invoiceQueue.addJob(invoice);
-
       return invoice;
     } catch (error) {
       // Log the error for debugging

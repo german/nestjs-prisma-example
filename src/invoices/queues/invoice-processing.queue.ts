@@ -10,19 +10,23 @@ export class InvoiceProcessingQueue {
   private readonly logger = new Logger(InvoiceProcessingQueue.name);
 
   constructor(private prisma: PrismaService) {
-    this.queue = new Queue('invoice-queue', {
+    this.queue = new Queue('invoice-processing', {
       connection: {
         host: 'localhost',
         port: 6379
       }
     });
 
-    this.worker = new Worker('invoice-queue', async job => {
+    this.worker = new Worker('invoice-processing', async job => {
+      this.logger.log(`Processing job: ${job.id}`);
+    
       try {
-        this.logger.log(`Processing invoice: ${job.data.id}`);
-        await this.doProcessing(job.data.id);
+        // Simulate processing logic
+        await this.processInvoice(job.data.id);
+
+        return { success: true };
       } catch (error) {
-        this.logger.error(`Failed to process invoice ${job.data.id}`, error);
+        this.logger.error(`Job ${job.id} failed`, error);
         throw error;
       }
     }, {
@@ -33,7 +37,7 @@ export class InvoiceProcessingQueue {
     });
   }
 
-  private async doProcessing(id: string) {
+  private async processInvoice(id: string) {
     // Simulate an async processing step
     // await new Promise(resolve => setTimeout(resolve, 2000));
 
@@ -52,7 +56,7 @@ export class InvoiceProcessingQueue {
   }
 
   async addJob(invoiceData: any) {
-    return this.queue.add('process-invoice', invoiceData, {
+    return this.queue.add('invoice-processing', invoiceData, {
       attempts: 3,
       backoff: {
         type: 'exponential',

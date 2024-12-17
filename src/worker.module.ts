@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
 import { PrismaService } from './prisma/prisma.service';
-import { InvoiceProcessingWorker } from './workers/invoice-processing.worker';
+import { InvoiceProcessingQueue } from './invoices/queues/invoice-processing.queue';
 
 @Module({
   imports: [
@@ -17,7 +17,7 @@ import { InvoiceProcessingWorker } from './workers/invoice-processing.worker';
   ],
   providers: [
     PrismaService,
-    InvoiceProcessingWorker
+    InvoiceProcessingQueue
   ]
 })
 export class WorkerModule {}
